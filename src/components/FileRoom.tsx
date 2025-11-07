@@ -125,7 +125,7 @@ export default function FileRoom({ roomId }: { roomId: string }) {
 
   return (
     <div className="flex flex-col w-full max-w-6xl space-y-8 mx-auto">
-      <div className="w-full max-w-2xl space-y-8 bg-white/10 dark:bg-gray-900/20 backdrop-blur-2xl rounded-3xl p-12 shadow-2xl border border-white/20 dark:border-gray-700/30 mx-auto">
+      <div className="w-full max-w-2xl space-y-8 bg-white/10 dark:bg-gray-900/20 backdrop-blur-2xl rounded-3xl p-6 shadow-2xl border border-white/20 dark:border-gray-700/30 mx-auto">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center ">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Room: {roomId}</h1>

@@ -152,8 +152,8 @@ export default function ClickHerePage() {
         />
       </div>
 
-      <main className="relative z-10 flex min-h-screen items-center justify-center px-6 py-24">
-        <div className="w-full max-w-4xl space-y-10 rounded-3xl border border-white/15 bg-white/10 p-10 shadow-2xl backdrop-blur-2xl">
+      <main className="relative z-10 flex min-h-screen items-center justify-center px-6 py-28">
+        <div className="w-full max-w-4xl space-y-10 rounded-3xl border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-2xl">
           <Card className="border-white/20 bg-black/60 text-white">
             <CardHeader className="space-y-4">
               <CardTitle className="text-4xl font-bold tracking-tight">Back the Sendrn mission</CardTitle>

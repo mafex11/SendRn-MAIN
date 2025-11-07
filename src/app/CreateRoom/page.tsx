@@ -44,7 +44,7 @@ function CreateRoomClient() {
   };
 
   return (
-    <div className="min-h-screen w-full relative bg-black flex flex-col">
+    <div className="min-h-screen w-full relative bg-black flex flex-col overflow-x-hidden">
       {/* Prismatic Burst Background */}
       <div className="absolute inset-0 z-0 w-full h-full overflow-hidden">
         <PrismaticBurst
@@ -76,7 +76,7 @@ function CreateRoomClient() {
                   alt="Suspicious image"
                   width={100}
                   height={100}
-                  className="absolute top-full mt-2 left-1/2 translate-x-60 -translate-y-18 opacity-0 group-hover:opacity-100 group-hover:animate-fadeInOut transition-opacity duration-200"
+                  className="hidden md:block absolute top-full mt-2 left-1/2 md:translate-x-60 -translate-y-18 opacity-0 group-hover:opacity-100 group-hover:animate-fadeInOut transition-opacity duration-200"
                 />
               </div>
             </div>
@@ -96,7 +96,7 @@ function CreateRoomClient() {
                 <label className="block text-2xl font-semibold text-gray-400">
                   Already have a Room ID?
                 </label>
-                <div className="flex gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row">
                   <input
                     type="text"
                     value={inputRoomId}
@@ -106,7 +106,7 @@ function CreateRoomClient() {
                   />
                   <button
                     onClick={joinRoom}
-                    className="px-8 py-4 bg-white/30 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] text-lg hover:bg-zinc-800/50 border border-white/30"
+                    className="px-8 py-4 bg-white/30 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] text-lg hover:bg-zinc-800/50 border border-white/30 sm:w-auto w-full"
                   >
                     Join
                   </button>
