@@ -123,7 +123,13 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+    overflow-y: visible;
   }
 }

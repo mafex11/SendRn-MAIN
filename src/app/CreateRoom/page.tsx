@@ -4,7 +4,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import FileRoom from '../../components/FileRoom';
-import { NavigationMenuDemo } from '../../components/NavigationMenu';
 import { Button } from '../../components/ui/button';
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -15,8 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Image from 'next/image';
-import { ShootingStars  } from "@/components/ui/shooting-star";
-import { StarsBackground } from '@/components/ui/stars-background';
+import PrismaticBurst from '../../components/PrismaticBurst';
 
 // Create a separate client component for handling URL parameters
 function CreateRoomClient() {
@@ -46,86 +44,73 @@ function CreateRoomClient() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col ">
-      <ShootingStars />
-      <StarsBackground />
-      {/* Navigation Bar */}
-      <nav className="fixed top-4 left-0 right-0 w-3/4 mx-auto max-w-4xl z-50 rounded-xl shadow-md p-4 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1
-            className="text-2xl font-bold text-gray-800 dark:text-gray-100 hidden lg:block cursor-pointer"
-            onClick={() => window.location.href = "/"}
-          >Sendrn</h1>
-          <NavigationMenuDemo />
-          {/* <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                <span className="sr-only">Toggle theme</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setTheme("light")}>
-                Light
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("dark")}>
-                Dark
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("system")}>
-                System
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu> */}
-        </div>
-      </nav>
+    <div className="min-h-screen w-full relative bg-black flex flex-col">
+      {/* Prismatic Burst Background */}
+      <div className="absolute inset-0 z-0 w-full h-full overflow-hidden">
+        <PrismaticBurst
+          intensity={2}
+          speed={0.5}
+          animationType="rotate3d"
+          mixBlendMode="lighten"
+          colors={[]}
+          rayCount={0}
+        />
+      </div>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center p-8 pt-20 overflow-y-auto mt-6 z-50">
+      <main className="flex-1 flex items-center justify-center p-8 pt-20 overflow-y-auto mt-6 z-10 relative">
         {!roomId ? (
-          <div className="w-full max-w-md space-y-6 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 shadow-lg ">
-            <h1 className="text-4xl font-bold text-center dark:text-gray-100">
-            Secure Sharing Room
-            </h1>
-            <div className="relative flex justify-center group">
-              <h2
-                className="scroll-m-20 border-b text-center pb-2 text-md font-semibold tracking-tight text-gray-700 dark:text-gray-300"
-              >
-               Create a private space for your personal content.
-              </h2>
-              <Image
-                src="/sus.png"
-                alt="Suspicious image"
-                width={100}
-                height={100}
-                className="absolute top-full mt-2 left-1/2 translate-x-60 -translate-y-18 opacity-0 group-hover:opacity-100 group-hover:animate-fadeInOut transition-opacity duration-200"
-              />
-            </div>
-            <Button
-              onClick={createRoom}
-              className="w-full py-3 px-4 bg-gray-700 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 "
-            >
-             Create a New Room
-            </Button>
-            <div className="divider text-gray-500 dark:text-gray-400">OR</div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Enter Room ID
-              </label>
-              <div className="flex space-x-3">
-                <input
-                  type="text"
-                  value={inputRoomId}
-                  onChange={(e) => setInputRoomId(e.target.value)}
-                  className="flex-1 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
-                  placeholder="Enter room ID"
-                />
-                <button
-                  onClick={joinRoom}
-                  className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200"
+          <div className="w-full max-w-2xl space-y-8 bg-white/10 dark:bg-gray-900/20 backdrop-blur-2xl rounded-3xl p-12 shadow-2xl border border-white/20 dark:border-gray-700/30">
+            <div className="space-y-4">
+              <h1 className="text-5xl font-bold text-center bg-gradient-to-r from-white to-gray-300 dark:from-gray-100 dark:to-gray-400 bg-clip-text text-transparent">
+                Secure Sharing Room
+              </h1>
+              <div className="relative flex justify-center group">
+                <h2
+                  className="scroll-m-20 border-b border-white/20 dark:border-gray-600/30 text-center pb-4 text-xl font-medium tracking-wide text-gray-200 dark:text-gray-300"
                 >
-                  Join
-                </button>
+                  Create a private space for your personal content.
+                </h2>
+                <Image
+                  src="/sus.png"
+                  alt="Suspicious image"
+                  width={100}
+                  height={100}
+                  className="absolute top-full mt-2 left-1/2 translate-x-60 -translate-y-18 opacity-0 group-hover:opacity-100 group-hover:animate-fadeInOut transition-opacity duration-200"
+                />
+              </div>
+            </div>
+            <div className="space-y-6 pt-4">
+              <Button
+                onClick={createRoom}
+                className="w-full py-6 px-6 bg-white/20 text-white border border-white/30 hover:bg-zinc-800/50 font-semibold text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+              >
+                Create a New Room
+              </Button>
+              <div className="flex items-center gap-4">
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+                <span className="text-gray-400 dark:text-gray-500 font-medium">OR</span>
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+              </div>
+              <div className="space-y-4">
+                <label className="block text-2xl font-semibold text-gray-400">
+                  Already have a Room ID?
+                </label>
+                <div className="flex gap-4">
+                  <input
+                    type="text"
+                    value={inputRoomId}
+                    onChange={(e) => setInputRoomId(e.target.value)}
+                    className="flex-1 px-6 py-4 bg-white/20 border border-white/30 rounded-full text-white focus:bg-zinc-800/50 placeholder-gray-300  backdrop-blur-sm text-xl"
+                    placeholder="Enter room ID"
+                  />
+                  <button
+                    onClick={joinRoom}
+                    className="px-8 py-4 bg-white/30 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] text-lg hover:bg-zinc-800/50 border border-white/30"
+                  >
+                    Join
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -134,11 +119,11 @@ function CreateRoomClient() {
         )}
         
       </main>
-      <footer className="mt-8 text-center text-gray-600 dark:text-gray-400">
+      <footer className="mt-8 text-center text-gray-600 dark:text-gray-400 relative z-10">
         Made by <a href="https://github.com/mafex11" className="underline" target="_blank" rel="noopener noreferrer">@mafex11</a> in a day. &lt;3
       </footer>
 
-      <h1 className='text center flex-col mx-auto mb-6 mt-2 text-gray-500'>
+      <h1 className='text center flex-col mx-auto mb-6 mt-2 text-gray-500 relative z-10'>
       &copy;2025, Mafex Inc.
       </h1>
     

@@ -1,6 +1,7 @@
 import './globals.css';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { ThemeProvider } from "../components/theme-provider"
+import { Navbar } from "../components/Navbar"
 
 export const metadata = {
   title: 'Send up',
@@ -25,6 +26,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <Navbar />
             {children}
           </ThemeProvider>
         </ErrorBoundary>
