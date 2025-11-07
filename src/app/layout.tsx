@@ -4,7 +4,7 @@ import { ThemeProvider } from "../components/theme-provider"
 import { Navbar } from "../components/Navbar"
 
 export const metadata = {
-  title: 'Send up',
+  title: 'SendRN',
   description: 'Share files easily without BS',
   icons: {
     icon: '/Flow.png', // Update this to your favicon path
