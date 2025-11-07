@@ -5,4 +5,6 @@ export interface CloudinaryResource {
     format?: string; // Add this if not already present
     bytes: number;
     created_at: string;
+    roomId?: string;
+    custom_id?: string | null;
   }

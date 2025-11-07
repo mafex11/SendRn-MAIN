@@ -40,6 +40,8 @@ export default function FileRoom({ roomId }: { roomId: string }) {
             updatedFiles[existingIndex] = newFile;
           }
         });
+        // Sort by created_at descending so newest appears first
+        updatedFiles.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         return updatedFiles;
       });
       console.log('Files fetched successfully:', response.data);
@@ -154,7 +156,7 @@ export default function FileRoom({ roomId }: { roomId: string }) {
           <div className="flex flex-col items-center space-y-4">
             <QRCodeSVG
               value={roomUrl}
-              size={300}
+              size={200}
               level="H"
               includeMargin
               className="bg-white p-2 rounded-lg"
@@ -222,7 +224,7 @@ export default function FileRoom({ roomId }: { roomId: string }) {
               <span>Uploading...</span>
               <span>{uploadProgress}%</span>
             </div>
-            <div className="w-full bg-gray-200  rounded-full h-2">
+            <div className="w-full bg-black border border-white rounded-full h-2">
               <div
                 className="bg-white h-2 rounded-full transition-all duration-300"
                 style={{ width: `${uploadProgress}%` }}
@@ -243,9 +245,9 @@ export default function FileRoom({ roomId }: { roomId: string }) {
     </div>
 
       {files.length > 0 && (
-        <div className="w-full">
+        <div className="w-full max-w-2xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Uploaded Files</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {files.map((file) => {
               const filenameFromPublicId = file.public_id.split('/').pop() || 'Unnamed File';
               const displayName =
