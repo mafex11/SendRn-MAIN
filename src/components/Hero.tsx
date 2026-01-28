@@ -2,15 +2,15 @@
 
 import { Button } from './ui/button';
 import Link from 'next/link';
-import { Spotlight } from './ui/spotlight-new';
-import Prism from './Prism';
+// import { Spotlight } from './ui/spotlight-new';
+// import Prism from './Prism';
 import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Hero() {
   return (
     <section className="relative flex-1 flex items-center justify-center pt-32 pb-20 px-4 min-h-screen w-full">
-      {/* Prism Background */}
+      {/*
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
         <Prism 
           animationType="rotate"
@@ -24,6 +24,7 @@ export default function Hero() {
           baseWidth={8}
         />
       </div>
+      */}
 
       <div className="max-w-6xl mx-auto w-full relative z-10">
         <div className="flex flex-col items-center justify-center space-y-8 text-center">
@@ -71,7 +72,7 @@ export default function Hero() {
           </motion.div>
         </div>
       </div>
-      <Spotlight />
+      {/* <Spotlight /> */}
     </section>
   );
 }

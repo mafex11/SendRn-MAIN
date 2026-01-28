@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { type ElementType } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import PrismaticBurst from '../../components/PrismaticBurst';
+// import PrismaticBurst from '../../components/PrismaticBurst';
 import { Github, Linkedin, Mail, Send, Timer, Users } from 'lucide-react';
 
 type Highlight = {
@@ -47,7 +47,8 @@ const snapshots: Snapshot[] = [
 
 export default function AboutPage() {
   return (
-    <div className="relative min-h-screen w-full bg-black text-white">
+    <div className="relative min-h-screen w-full bg-zinc-950 text-white">
+      {/*
       <div className="absolute inset-0 z-0">
         <PrismaticBurst
           intensity={2.2}
@@ -59,6 +60,7 @@ export default function AboutPage() {
           distort={6}
         />
       </div>
+      */}
 
       <main className="relative z-10 flex min-h-screen items-center justify-center px-6 py-28">
         <div className="w-full max-w-4xl space-y-10 rounded-3xl border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-2xl">

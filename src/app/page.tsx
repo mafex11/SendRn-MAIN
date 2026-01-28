@@ -41,7 +41,7 @@ const features = [
 
 export default function Home() {
   return (
-    <div className="w-full bg-black/80 antialiased bg-grid-white/[0.02] relative overflow-x-hidden">
+    <div className="w-full bg-zinc-950 text-white antialiased relative overflow-x-hidden">
       <div className="min-h-screen flex flex-col relative z-10 w-full">
 
         {/* Hero Section */}

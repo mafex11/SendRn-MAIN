@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Image from 'next/image';
-import PrismaticBurst from '../../components/PrismaticBurst';
+// import PrismaticBurst from '../../components/PrismaticBurst';
 
 // Create a separate client component for handling URL parameters
 function CreateRoomClient() {
@@ -44,8 +44,8 @@ function CreateRoomClient() {
   };
 
   return (
-    <div className="min-h-screen w-full relative bg-black flex flex-col overflow-x-hidden">
-      {/* Prismatic Burst Background */}
+    <div className="min-h-screen w-full relative bg-zinc-950 flex flex-col overflow-x-hidden">
+      {/*
       <div className="absolute inset-0 z-0 w-full h-full overflow-hidden">
         <PrismaticBurst
           intensity={2}
@@ -56,6 +56,7 @@ function CreateRoomClient() {
           rayCount={0}
         />
       </div>
+      */}
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-8 pt-20 overflow-y-auto mt-6 z-10 relative">
