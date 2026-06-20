@@ -1,13 +1,13 @@
 import './globals.css';
-import { ErrorBoundary } from '../components/ErrorBoundary';
 import { ThemeProvider } from "../components/theme-provider"
 import { Navbar } from "../components/Navbar"
+import { Toaster } from 'sonner';
 
 export const metadata = {
-  title: 'SendRN',
-  description: 'Share files easily without BS',
+  title: 'Sendrn — Instant File Sharing',
+  description: 'Share files across devices instantly. No sign-up, no hassle.',
   icons: {
-    icon: '/Flow.png', // Update this to your favicon path
+    icon: '/Flow.png',
   },
 };
 
@@ -17,19 +17,31 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="dark">
       <body>
-        <ErrorBoundary>
         <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <Navbar />
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          <div className="mesh-gradient" aria-hidden="true" />
+          <div className="noise-overlay" aria-hidden="true" />
+          <Navbar />
+          <main className="relative z-10">
             {children}
-          </ThemeProvider>
-        </ErrorBoundary>
+          </main>
+          <Toaster
+            position="bottom-center"
+            toastOptions={{
+              style: {
+                background: 'oklch(0.15 0.015 260)',
+                border: '1px solid oklch(0.25 0.02 260)',
+                color: 'oklch(0.9 0.01 260)',
+              },
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   );

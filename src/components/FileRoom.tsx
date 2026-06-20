@@ -1,21 +1,40 @@
-// src/app/components/FileRoom.tsx
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
-import { CloudinaryResource } from '../app/types';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { CloudinaryResource, TextMessage } from '../app/types';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, QrCode, Copy } from 'lucide-react';
+import { Upload, X, QrCode, Copy, Check, FileText, Send, Download, File, Image, Video, Music } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
+
+type Tab = 'files' | 'text';
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getFileIcon(filename: string) {
+  const ext = filename.split('.').pop()?.toLowerCase() || '';
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext)) return Image;
+  if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) return Video;
+  if (['mp3', 'wav', 'flac', 'aac', 'ogg'].includes(ext)) return Music;
+  if (['pdf', 'doc', 'docx', 'txt', 'md'].includes(ext)) return FileText;
+  return File;
+}
 
 export default function FileRoom({ roomId }: { roomId: string }) {
   const [files, setFiles] = useState<CloudinaryResource[]>([]);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const [showQR, setShowQR] = useState(true);
-  const [isCopied, setIsCopied] = useState(false); // New state for copy feedback
+  const [uploadQueue, setUploadQueue] = useState<{ file: File; progress: number }[]>([]);
+  const [showQR, setShowQR] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>('files');
+  const [textMessages, setTextMessages] = useState<TextMessage[]>([]);
+  const [textInput, setTextInput] = useState('');
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     fetchFiles();
@@ -23,262 +42,400 @@ export default function FileRoom({ roomId }: { roomId: string }) {
     return () => clearInterval(interval);
   }, [roomId]);
 
+  useEffect(() => {
+    const stored = localStorage.getItem(`sendrn-text-${roomId}`);
+    if (stored) {
+      setTextMessages(JSON.parse(stored));
+    }
+  }, [roomId]);
+
   const fetchFiles = async () => {
     try {
-      console.log(`Fetching files for room: ${roomId}`);
-      const response = await axios.get(`/api/files/${roomId}`);
-      setFiles((prevFiles) => {
-        const newFiles = response.data;
-        const updatedFiles = [...prevFiles];
-        newFiles.forEach((newFile: CloudinaryResource) => {
-          const existingIndex = updatedFiles.findIndex(
-            (file) => file.public_id === newFile.public_id
-          );
-          if (existingIndex === -1) {
-            updatedFiles.push(newFile);
-          } else {
-            updatedFiles[existingIndex] = newFile;
-          }
+      const response = await fetch(`/api/files/${roomId}`);
+      if (!response.ok) throw new Error('Failed to fetch');
+      const newFiles: CloudinaryResource[] = await response.json();
+      setFiles(prev => {
+        const merged = [...prev];
+        newFiles.forEach(newFile => {
+          const idx = merged.findIndex(f => f.public_id === newFile.public_id);
+          if (idx === -1) merged.push(newFile);
+          else merged[idx] = newFile;
         });
-        // Sort by created_at descending so newest appears first
-        updatedFiles.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        return updatedFiles;
+        merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        return merged;
       });
-      console.log('Files fetched successfully:', response.data);
-    } catch (err) {
-      setError('Failed to load files or API limit reached, please try again in 20 mins, or try donating :)');
-      console.error('Error fetching files:', err);
+    } catch {
+      // Silent retry on next interval
     }
+  };
+
+  const uploadFile = async (file: File, index: number) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('roomId', roomId);
+
+    const xhr = new XMLHttpRequest();
+    return new Promise<void>((resolve, reject) => {
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const progress = Math.round((e.loaded * 100) / e.total);
+          setUploadQueue(prev => prev.map((item, i) =>
+            i === index ? { ...item, progress } : item
+          ));
+        }
+      });
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error('Upload failed'));
+      });
+      xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+      xhr.open('POST', '/api/upload');
+      xhr.send(formData);
+    });
   };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      setSelectedFile(acceptedFiles[0]);
-      handleUpload(acceptedFiles[0]);
+    if (acceptedFiles.length === 0) return;
+
+    const queue = acceptedFiles.map(file => ({ file, progress: 0 }));
+    setUploadQueue(queue);
+    setIsUploading(true);
+
+    let successCount = 0;
+    for (let i = 0; i < acceptedFiles.length; i++) {
+      try {
+        await uploadFile(acceptedFiles[i], i);
+        successCount++;
+      } catch {
+        toast.error(`Failed to upload ${acceptedFiles[i].name}`);
+      }
     }
-  }, []);
+
+    await fetchFiles();
+    setIsUploading(false);
+    setUploadQueue([]);
+
+    if (successCount > 0) {
+      toast.success(`${successCount} file${successCount > 1 ? 's' : ''} uploaded`);
+    }
+  }, [roomId]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    multiple: false,
+    multiple: true,
   });
 
-  const handleUpload = async (file: File) => {
-    setIsUploading(true);
-    setUploadProgress(0);
-    console.log('Sending file:', file.name);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('roomId', roomId);
-      console.log('Uploading file to Cloudinary...');
-      const response = await axios.post('/api/upload', formData, {
-        onUploadProgress: (progressEvent) => {
-          const progress = progressEvent.total
-            ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
-            : 0;
-          setUploadProgress(progress);
-        },
-      });
-      console.log('File uploaded successfully:', response.data);
-      await fetchFiles();
-      setSelectedFile(null);
-      setError(null);
-      setUploadProgress(0);
-    } catch (err) {
-      setError('Upload failed');
-      console.error('Error uploading file:', err);
-    } finally {
-      setIsUploading(false);
-      console.log('Upload process completed');
-    }
+  const roomUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/CreateRoom?roomId=${roomId}`
+    : `https://sendrn.vercel.app/CreateRoom?roomId=${roomId}`;
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(label);
+    toast.success(`${label} copied`);
+    setTimeout(() => setCopied(null), 2000);
   };
 
-  const roomUrl = `https://sendrn.vercel.app/CreateRoom?roomId=${roomId}`;
-
-  const handleCopyRoomId = () => {
-    navigator.clipboard.writeText(roomId);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000); // Reset after 2 seconds
+  const handleSendText = () => {
+    if (!textInput.trim()) return;
+    const msg: TextMessage = {
+      id: crypto.randomUUID(),
+      content: textInput.trim(),
+      created_at: new Date().toISOString(),
+    };
+    const updated = [msg, ...textMessages];
+    setTextMessages(updated);
+    localStorage.setItem(`sendrn-text-${roomId}`, JSON.stringify(updated));
+    setTextInput('');
+    toast.success('Text saved to room');
   };
 
-  if (error) {
-    return (
-      <div className="flex flex-col w-full max-w-6xl space-y-8 mx-auto">
-        <div className="w-full max-w-2xl space-y-8 bg-white/10 dark:bg-gray-900/20 backdrop-blur-2xl rounded-3xl p-12 shadow-2xl border border-white/20 dark:border-gray-700/30 mx-auto">
-          <div className="flex flex-col space-y-4">
-            <div className="flex items-start space-x-2 text-white dark:text-red-400">
-              <X className="w-5 h-5 mt-0.5" />
-              <span>{error}</span>
-            </div>
-            <button
-              onClick={() => window.location.href = '/Donate'}
-              className="px-4 py-2 bg-zinc-950/30 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] text-lg hover:bg-zinc-800/50 border border-white/30"
-            >
-              Support Sendrn with a Donation
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleDeleteText = (id: string) => {
+    const updated = textMessages.filter(m => m.id !== id);
+    setTextMessages(updated);
+    localStorage.setItem(`sendrn-text-${roomId}`, JSON.stringify(updated));
+  };
 
   return (
-    <div className="flex flex-col w-full max-w-6xl space-y-8 mx-auto">
-      <div className="w-full max-w-2xl space-y-8 bg-white/10 dark:bg-gray-900/20 backdrop-blur-2xl rounded-3xl p-6 shadow-2xl border border-white/20 dark:border-gray-700/30 mx-auto">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center ">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Room: {roomId}</h1>
+    <div className="w-full max-w-2xl mx-auto space-y-6 animate-fade-in">
+      {/* Room Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-white">
+            Room <span className="font-mono text-white/70">{roomId}</span>
+          </h1>
           <button
-            onClick={handleCopyRoomId}
-            className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200"
-            title="Copy Room ID"
+            onClick={() => handleCopy(roomId, 'Room ID')}
+            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
           >
-            <Copy className="w-5 h-5" />
+            {copied === 'Room ID' ? (
+              <Check className="w-4 h-4 text-emerald-400" />
+            ) : (
+              <Copy className="w-4 h-4 text-white/50" />
+            )}
           </button>
-          {isCopied && (
-            <span className="text-sm text-green-500 dark:text-green-400 animate-fadeInOut relative ">
-              Copied!
-            </span>
-          )}
         </div>
         <button
           onClick={() => setShowQR(!showQR)}
-          className="flex items-center space-x-2 px-4 py-2 bg-zinc-950/50 border border-white/30 hover:bg-zinc-900/20  rounded-lg transition-colors duration-200"
+          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-sm text-white/70"
         >
-          <QrCode className="w-5 h-5" />
-          <span>QR Code</span>
+          <QrCode className="w-4 h-4" />
+          <span className="hidden sm:inline">QR</span>
         </button>
       </div>
 
-      {showQR && (
-        <div className="mb-8 p-6 bg-zinc-950/20 border border-white/30 hover:bg-zinc-900/20 rounded-3xl shadow-lg " >
-          <div className="flex flex-col items-center space-y-4">
-            <QRCodeSVG
-              value={roomUrl}
-              size={200}
-              level="H"
-              includeMargin
-              className="bg-white p-2 rounded-lg"
-            />
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              Scan to open this room on your phone
-            </p>
-            <div className="flex items-center space-x-2 w-full">
-              <input
-                type="text"
-                value={roomUrl}
-                readOnly
-                className="px-4 py-2 bg-zinc-950/20 border border-white/30 rounded-full text-white focus:bg-zinc-800/50 placeholder-gray-300  backdrop-blur-sm text-xl w-full"
-              />
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(roomUrl);
-                }}
-                className="px-4 py-2 bg-zinc-950/30 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] text-lg hover:bg-zinc-800/50 border border-white/30"
-              >
-                Copy
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="mb-8">
-        <div
-          {...getRootProps()}
-          className={`
-            border-2 border-dashed rounded-3xl p-8 text-center cursor-pointer
-            transition-colors duration-200 ease-in-out
-            ${isDragActive 
-              ? 'border-white/50 bg-zinc-950/20 ' 
-              : 'border-white/30 hover:border-white'
-            }
-          `}
-        >
-          <input {...getInputProps()} />
-          <div className="flex flex-col items-center justify-center space-y-4">
-            <Upload 
-              className={`w-12 h-12 ${
-                isDragActive ? 'text-white' : 'text-gray-400 dark:text-gray-600'
-              }`}
-            />
-            {isDragActive ? (
-              <p className="text-lg  text-white">Drop the file here...</p>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-lg text-white">
-                  Drag & drop a file here, or click to select
-                </p>
-                <p className="text-sm text-white">
-                  Supports any file type
-                </p>
+      {/* QR Code Panel */}
+      <AnimatePresence>
+        {showQR && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+              <div className="flex flex-col items-center gap-4">
+                <QRCodeSVG
+                  value={roomUrl}
+                  size={180}
+                  level="H"
+                  includeMargin
+                  className="rounded-xl"
+                  bgColor="#ffffff"
+                  fgColor="#09090b"
+                />
+                <p className="text-sm text-white/50">Scan to open on another device</p>
+                <div className="flex items-center gap-2 w-full max-w-sm">
+                  <input
+                    type="text"
+                    value={roomUrl}
+                    readOnly
+                    className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 text-xs truncate"
+                  />
+                  <button
+                    onClick={() => handleCopy(roomUrl, 'Link')}
+                    className="px-3 py-2 rounded-lg bg-white/10 border border-white/10 hover:bg-white/15 transition-colors text-sm text-white"
+                  >
+                    {copied === 'Link' ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
               </div>
-            )}
-          </div>
-        </div>
-
-        {isUploading && (
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center justify-between text-sm text-gray-600 ">
-              <span>Uploading...</span>
-              <span>{uploadProgress}%</span>
             </div>
-            <div className="w-full bg-black border border-white rounded-full h-2">
-              <div
-                className="bg-white h-2 rounded-full transition-all duration-300"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-          </div>
+          </motion.div>
         )}
+      </AnimatePresence>
 
-        {error && (
-          <div className="mt- p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 z-50 rounded-3xl">
-            <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
-              <X className="w-5 h-5" />
-              <span>{error}</span>
-            </div>
-          </div>
-        )}
+      {/* Tab Switcher */}
+      <div className="flex gap-1 p-1 rounded-xl bg-white/5 border border-white/10">
+        <button
+          onClick={() => setActiveTab('files')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            activeTab === 'files'
+              ? 'bg-white/10 text-white'
+              : 'text-white/50 hover:text-white/70'
+          }`}
+        >
+          <Upload className="w-4 h-4" />
+          Files
+        </button>
+        <button
+          onClick={() => setActiveTab('text')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            activeTab === 'text'
+              ? 'bg-white/10 text-white'
+              : 'text-white/50 hover:text-white/70'
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          Text
+        </button>
       </div>
-    </div>
 
-      {files.length > 0 && (
-        <div className="w-full max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Uploaded Files</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {files.map((file) => {
-              const filenameFromPublicId = file.public_id.split('/').pop() || 'Unnamed File';
-              const displayName =
-                file.original_filename && file.original_filename !== 'file'
-                  ? file.original_filename
-                  : filenameFromPublicId;
-              return (
-                <div key={file.public_id} className="bg-zinc-950/20 border border-white/30 hover:bg-zinc-900/20 rounded-3xl shadow-lg overflow-hidden">
-                  <div className="p-4">
-                    <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 truncate">
-                      {displayName}
-                    </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Size: {(file.bytes / 1024).toFixed(2)} KB
-                    </p>
-                    <div className="mt-4 flex justify-end">
+      {/* Files Tab */}
+      {activeTab === 'files' && (
+        <div className="space-y-4">
+          {/* Drop Zone */}
+          <div
+            {...getRootProps()}
+            className={`
+              relative rounded-2xl border-2 border-dashed p-8 text-center cursor-pointer transition-all duration-200
+              ${isDragActive
+                ? 'border-white/40 bg-white/10 scale-[1.01]'
+                : 'border-white/15 hover:border-white/30 hover:bg-white/5'
+              }
+            `}
+          >
+            <input {...getInputProps()} />
+            <div className="flex flex-col items-center gap-3">
+              <div className={`p-4 rounded-2xl transition-colors ${isDragActive ? 'bg-white/15' : 'bg-white/5'}`}>
+                <Upload className={`w-8 h-8 ${isDragActive ? 'text-white' : 'text-white/40'}`} />
+              </div>
+              {isDragActive ? (
+                <p className="text-white font-medium">Drop files here</p>
+              ) : (
+                <div className="space-y-1">
+                  <p className="text-white/80 font-medium">Drop files or click to upload</p>
+                  <p className="text-white/40 text-sm">Multiple files supported</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Upload Progress */}
+          <AnimatePresence>
+            {isUploading && uploadQueue.length > 0 && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="space-y-2 overflow-hidden"
+              >
+                {uploadQueue.map((item, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white/80 truncate">{item.file.name}</p>
+                      <div className="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
+                        <motion.div
+                          className="h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${item.progress}%` }}
+                          transition={{ duration: 0.3 }}
+                        />
+                      </div>
+                    </div>
+                    <span className="text-xs text-white/50 tabular-nums">{item.progress}%</span>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* File List */}
+          {files.length > 0 && (
+            <div className="space-y-2">
+              <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">
+                {files.length} file{files.length > 1 ? 's' : ''} in room
+              </h2>
+              <div className="space-y-2">
+                {files.map((file) => {
+                  const name = file.original_filename && file.original_filename !== 'file'
+                    ? file.original_filename
+                    : file.public_id.split('/').pop() || 'Unnamed';
+                  const Icon = getFileIcon(name);
+                  return (
+                    <motion.div
+                      key={file.public_id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/8 transition-colors group"
+                    >
+                      <div className="p-2 rounded-lg bg-white/5">
+                        <Icon className="w-4 h-4 text-white/60" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white/90 truncate">{name}</p>
+                        <p className="text-xs text-white/40">{formatBytes(file.bytes)}</p>
+                      </div>
                       <a
                         href={file.secure_url}
                         download
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-4 py-2 bg-zinc-950/30 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] text-lg hover:bg-zinc-800/50 border border-white/30"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 transition-colors text-sm text-white/80 opacity-0 group-hover:opacity-100 sm:opacity-100"
                       >
-                        Download
+                        <Download className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Download</span>
                       </a>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {files.length === 0 && !isUploading && (
+            <p className="text-center text-white/30 text-sm py-8">
+              No files yet. Drop something above to get started.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Text Tab */}
+      {activeTab === 'text' && (
+        <div className="space-y-4">
+          <div className="relative">
+            <textarea
+              ref={textAreaRef}
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  handleSendText();
+                }
+              }}
+              placeholder="Paste text, links, code snippets..."
+              className="w-full min-h-[120px] p-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 resize-none focus:outline-none focus:border-white/25 transition-colors"
+            />
+            <div className="absolute bottom-3 right-3 flex items-center gap-2">
+              <span className="text-xs text-white/30">
+                {navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}+Enter
+              </span>
+              <button
+                onClick={handleSendText}
+                disabled={!textInput.trim()}
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                <Send className="w-4 h-4 text-white" />
+              </button>
+            </div>
           </div>
+
+          {textMessages.length > 0 && (
+            <div className="space-y-2">
+              <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">
+                Saved text
+              </h2>
+              {textMessages.map((msg) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="group relative p-4 rounded-xl bg-white/5 border border-white/10"
+                >
+                  <pre className="text-sm text-white/80 whitespace-pre-wrap break-words font-mono leading-relaxed">
+                    {msg.content}
+                  </pre>
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => handleCopy(msg.content, msg.id)}
+                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                    >
+                      {copied === msg.id ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5 text-white/60" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteText(msg.id)}
+                      className="p-1.5 rounded-lg bg-white/10 hover:bg-red-500/20 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5 text-white/60" />
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {textMessages.length === 0 && (
+            <p className="text-center text-white/30 text-sm py-8">
+              Share text, links, or code between your devices.
+            </p>
+          )}
         </div>
       )}
     </div>

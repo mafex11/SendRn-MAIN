@@ -2,20 +2,14 @@
 
 import Link from 'next/link';
 import { type ElementType } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-// import PrismaticBurst from '../../components/PrismaticBurst';
 import { Github, Linkedin, Mail, Send, Timer, Users } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 type Highlight = {
   title: string;
   description: string;
   icon: ElementType;
-};
-
-type Snapshot = {
-  label: string;
-  value: string;
 };
 
 const highlights: Highlight[] = [
@@ -32,115 +26,94 @@ const highlights: Highlight[] = [
     icon: Users,
   },
   {
-    title: 'Ship speed',
+    title: 'Shipped fast',
     description:
       'The first version shipped in under 24 hours because the pain was real. Continuous tweaks keep it fast and reliable the moment you need it.',
     icon: Timer,
   },
 ];
 
-const snapshots: Snapshot[] = [
-  { label: 'Founder', value: 'Sudhanshu Pandit' },
-  { label: 'Origin', value: 'College, 2024' },
-  { label: 'Core focus', value: 'Fast file transfer' },
-];
-
 export default function AboutPage() {
   return (
-    <div className="relative min-h-screen w-full bg-zinc-950 text-white">
-      {/*
-      <div className="absolute inset-0 z-0">
-        <PrismaticBurst
-          intensity={2.2}
-          speed={0.45}
-          animationType="rotate3d"
-          mixBlendMode="screen"
-          colors={["#ffffff", "#38bdf8", "#a855f7", "#f97316"]}
-          rayCount={10}
-          distort={6}
-        />
-      </div>
-      */}
-
-      <main className="relative z-10 flex min-h-screen items-center justify-center px-6 py-28">
-        <div className="w-full max-w-4xl space-y-10 rounded-3xl border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-2xl">
-          <Card className="border-white/20 bg-black/50 text-white">
-            <CardHeader className="space-y-4">
-              <CardTitle className="text-4xl font-bold tracking-tight">Sendrn is built for your real-world file hops</CardTitle>
-              <CardDescription className="text-lg text-neutral-300">
-                I am Sudhanshu Pandit, a Final Year CSE student who was tired of logging into web whatsapp on every public computer to print a simple file. Sendrn is the practical fix for that scramble.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-6 md:grid-cols-3">
-              {snapshots.map((snapshot) => (
-                <div key={snapshot.label} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
-                  <p className="text-sm uppercase tracking-wide text-neutral-400">{snapshot.label}</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{snapshot.value}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {highlights.map((highlight) => {
-              const Icon = highlight.icon;
-              return (
-                <Card key={highlight.title} className="border-white/15 bg-black/60 text-white">
-                  <CardHeader className="space-y-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-white/10">
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <CardTitle className="text-xl">{highlight.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm leading-relaxed text-neutral-300">{highlight.description}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-
-          <Card className="border-white/20 bg-black/60 text-white">
-            <CardHeader className="space-y-2">
-              <CardTitle className="text-2xl">Stay in the loop</CardTitle>
-              <CardDescription className="text-neutral-300">
-                Reach out if you have feedback or want to pair on the next upgrade.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4 sm:flex-row">
-              <Button variant="outline" className="flex-1 border-white/30 bg-white/10 text-white hover:bg-white/20" asChild>
-                <Link href="mailto:sudhanshu@sendrn.app" aria-label="Email Sudhanshu">
-                  <Mail className="mr-2 h-5 w-5" />
-                  Email Sudhanshu
-                </Link>
-              </Button>
-              <Button variant="outline" className="flex-1 border-white/30 bg-white/10 text-white hover:bg-white/20" asChild>
-                <Link href="https://www.linkedin.com/in/sudhanshu-pandit-17a126240/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn profile">
-                  <Linkedin className="mr-2 h-5 w-5" />
-                  LinkedIn
-                </Link>
-              </Button>
-              <Button variant="outline" className="flex-1 border-white/30 bg-white/10 text-white hover:bg-white/20" asChild>
-                <Link href="https://github.com/mafex11" target="_blank" rel="noopener noreferrer" aria-label="GitHub profile">
-                  <Github className="mr-2 h-5 w-5" />
-                  GitHub
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-white/10 bg-transparent text-neutral-300">
-            <CardContent className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
-              <p className="text-sm">
-                Every feature is stress-tested on real printer-shop workflows so you spend time printing, not juggling accounts.
-              </p>
-              <Button size="lg" className="rounded-full px-8" asChild>
-                <Link href="/CreateRoom">Create your room</Link>
-              </Button>
-            </CardContent>
-          </Card>
+    <div className="min-h-screen w-full text-white flex items-center justify-center px-4 py-28">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-3xl space-y-8"
+      >
+        <div className="space-y-4">
+          <h1 className="text-4xl font-bold tracking-tight text-white">
+            Built for real-world file hops
+          </h1>
+          <p className="text-lg text-white/50 max-w-2xl">
+            I'm Sudhanshu Pandit, a Final Year CSE student tired of logging into WhatsApp Web on every public computer to print a file. Sendrn is the practical fix.
+          </p>
         </div>
-      </main>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          {[
+            { label: 'Founder', value: 'Sudhanshu Pandit' },
+            { label: 'Origin', value: 'College, 2024' },
+            { label: 'Focus', value: 'Fast file transfer' },
+          ].map(item => (
+            <div key={item.label} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.08]">
+              <p className="text-xs uppercase tracking-wider text-white/40">{item.label}</p>
+              <p className="mt-1 text-white font-medium">{item.value}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          {highlights.map((h) => {
+            const Icon = h.icon;
+            return (
+              <div key={h.title} className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
+                <div className="p-2.5 rounded-xl bg-white/[0.06] w-fit">
+                  <Icon className="w-5 h-5 text-white/70" />
+                </div>
+                <h3 className="font-semibold text-white">{h.title}</h3>
+                <p className="text-sm text-white/50 leading-relaxed">{h.description}</p>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-4">
+          <h2 className="text-xl font-semibold text-white">Get in touch</h2>
+          <div className="flex flex-wrap gap-3">
+            <Button variant="outline" className="rounded-xl border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white" asChild>
+              <Link href="https://github.com/mafex11" target="_blank" rel="noopener noreferrer">
+                <Github className="mr-2 h-4 w-4" />
+                GitHub
+              </Link>
+            </Button>
+            <Button variant="outline" className="rounded-xl border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white" asChild>
+              <Link href="https://www.linkedin.com/in/sudhanshu-pandit-17a126240/" target="_blank" rel="noopener noreferrer">
+                <Linkedin className="mr-2 h-4 w-4" />
+                LinkedIn
+              </Link>
+            </Button>
+            <Button variant="outline" className="rounded-xl border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white" asChild>
+              <Link href="mailto:sudhanshu@sendrn.app">
+                <Mail className="mr-2 h-4 w-4" />
+                Email
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
+          <p className="text-sm text-white/40">
+            Stress-tested on real printer-shop workflows.
+          </p>
+          <Link href="/CreateRoom">
+            <Button size="sm" className="rounded-xl bg-white text-black hover:bg-white/90">
+              Create room
+            </Button>
+          </Link>
+        </div>
+      </motion.div>
     </div>
   );
 }

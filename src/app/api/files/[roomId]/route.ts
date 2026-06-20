@@ -9,7 +9,6 @@ cloudinary.config({
 });
 
 const utapi = new UTApi();
-
 const isUploadThingEnabled = () => Boolean(process.env.UPLOADTHING_TOKEN);
 
 export async function GET(
@@ -18,8 +17,6 @@ export async function GET(
 ) {
   try {
     const { roomId } = await params;
-    console.log('Fetching files for room ID:', roomId);
-    console.log('Using prefix:', `rooms/${roomId}`);
 
     if (isUploadThingEnabled()) {
       const collectedFiles: {
@@ -40,10 +37,7 @@ export async function GET(
         collectedFiles.push(...response.files);
         hasMore = response.hasMore;
         offset += response.files.length;
-
-        if (!hasMore || response.files.length === 0) {
-          break;
-        }
+        if (!hasMore || response.files.length === 0) break;
       }
 
       const relevantFiles = collectedFiles.filter((file) =>
@@ -51,7 +45,7 @@ export async function GET(
       );
 
       if (relevantFiles.length === 0) {
-        return NextResponse.json([], { status: 200 });
+        return NextResponse.json([]);
       }
 
       const keys = relevantFiles.map((file) => file.key);
@@ -60,8 +54,7 @@ export async function GET(
 
       const normalized = relevantFiles.map((file) => ({
         public_id: file.key,
-        secure_url:
-          urlByKey.get(file.key) ?? `https://utfs.io/f/${file.key}`,
+        secure_url: urlByKey.get(file.key) ?? `https://utfs.io/f/${file.key}`,
         original_filename: file.name,
         format: file.name.includes('.') ? file.name.split('.').pop() : undefined,
         bytes: file.size,
@@ -70,11 +63,9 @@ export async function GET(
         custom_id: file.customId,
       }));
 
-      console.log('UploadThing files:', normalized);
-      return NextResponse.json(normalized, { status: 200 });
+      return NextResponse.json(normalized);
     }
 
-    // Fetch all resource types
     const [rawFiles, imageFiles, videoFiles] = await Promise.all([
       cloudinary.api.resources({
         type: 'upload',
@@ -102,13 +93,8 @@ export async function GET(
       ...videoFiles.resources,
     ];
 
-    console.log('Raw files:', rawFiles.resources);
-    console.log('Image files:', imageFiles.resources);
-    console.log('Video files:', videoFiles.resources);
-    console.log('All files combined:', allFiles);
-    return NextResponse.json(allFiles, { status: 200 });
-  } catch (error) {
-    console.error('Fetch error:', error);
+    return NextResponse.json(allFiles);
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch files' }, { status: 500 });
   }
 }

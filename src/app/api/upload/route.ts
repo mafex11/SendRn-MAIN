@@ -10,7 +10,6 @@ cloudinary.config({
 });
 
 const utapi = new UTApi();
-
 const isUploadThingEnabled = () => Boolean(process.env.UPLOADTHING_TOKEN);
 
 type UploadThingSuccessPayload = {
@@ -30,15 +29,12 @@ export async function POST(request: NextRequest) {
     const roomId = formData.get('roomId');
 
     if (!(file instanceof File)) {
-      throw new Error('Missing file');
+      return NextResponse.json({ error: 'Missing file' }, { status: 400 });
     }
 
     if (typeof roomId !== 'string' || roomId.length === 0) {
-      throw new Error('Missing room identifier');
+      return NextResponse.json({ error: 'Missing room ID' }, { status: 400 });
     }
-
-    console.log('Uploading file to room:', roomId);
-    console.log('Original file name:', file.name);
 
     if (isUploadThingEnabled()) {
       const fileBuffer = await file.arrayBuffer();
@@ -60,19 +56,12 @@ export async function POST(request: NextRequest) {
       );
 
       if (!success) {
-        console.error('UploadThing reported an error', normalizedResult);
-        throw new Error('Upload failed');
+        return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
       }
 
-      const {
-        key,
-        url,
-        name,
-        size,
-        uploadedAt,
-      } = success.data;
+      const { key, url, name, size, uploadedAt } = success.data;
 
-      const payload = {
+      return NextResponse.json({
         public_id: key,
         secure_url: url,
         original_filename: name,
@@ -80,10 +69,7 @@ export async function POST(request: NextRequest) {
         bytes: size,
         created_at: new Date(uploadedAt ?? Date.now()).toISOString(),
         roomId,
-      };
-
-      console.log('UploadThing upload result:', payload);
-      return NextResponse.json(payload, { status: 200 });
+      });
     }
 
     const bytes = await file.arrayBuffer();
@@ -94,7 +80,6 @@ export async function POST(request: NextRequest) {
         {
           upload_preset: 'senddown',
           folder: `rooms/${roomId}`,
-          // Remove public_id to let Cloudinary generate a unique one
           resource_type: 'auto',
         },
         (error, result) => {
@@ -104,10 +89,8 @@ export async function POST(request: NextRequest) {
       ).end(buffer);
     });
 
-    console.log('Cloudinary upload result:', result);
-    return NextResponse.json(result, { status: 200 });
-  } catch (error) {
-    console.error('Upload error:', error);
+    return NextResponse.json(result);
+  } catch {
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 }
