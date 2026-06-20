@@ -2,19 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Rocket, ShieldCheck, Zap } from "lucide-react";
-import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { type ElementType } from 'react';
 
-type DonationTier = {
-  amount: number;
-  label: string;
-  description: string;
-  icon: ElementType;
-};
+type DonationTier = { amount: number; label: string; description: string; icon: ElementType; color: string; bg: string };
 
 type RazorpayCheckoutOptions = {
   key: string | undefined;
@@ -27,76 +20,41 @@ type RazorpayCheckoutOptions = {
   prefill: { name: string; email: string };
   theme: { color: string };
 };
-
 type RazorpayInstance = { open: () => void };
-type RazorpayWindow = Window & {
-  Razorpay?: new (options: RazorpayCheckoutOptions) => RazorpayInstance;
-};
+type RazorpayWindow = Window & { Razorpay?: new (options: RazorpayCheckoutOptions) => RazorpayInstance };
 
 const tiers: DonationTier[] = [
-  {
-    amount: 5,
-    label: 'Keep the lights on',
-    description: 'Covers basic hosting that keeps Sendrn online.',
-    icon: ShieldCheck,
-  },
-  {
-    amount: 15,
-    label: 'Speed upgrades',
-    description: 'Funds bandwidth spikes during peak usage.',
-    icon: Zap,
-  },
-  {
-    amount: 40,
-    label: 'Build the future',
-    description: 'Backs features like reusable rooms and better pairing.',
-    icon: Rocket,
-  },
+  { amount: 5, label: 'Keep the lights on', description: 'Covers basic hosting.', icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+  { amount: 15, label: 'Speed upgrades', description: 'Funds bandwidth spikes.', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-50' },
+  { amount: 40, label: 'Build the future', description: 'Backs new features.', icon: Rocket, color: 'text-blue-500', bg: 'bg-blue-50' },
 ];
 
-const presetAmounts = tiers.map((t) => t.amount);
-
-const loadRazorpayScript = () => {
-  return new Promise<void>((resolve, reject) => {
-    if (typeof window === 'undefined') { reject(new Error('No window')); return; }
-    if (document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
-      resolve(); return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Failed to load Razorpay'));
-    document.body.appendChild(script);
-  });
-};
+const loadRazorpayScript = () => new Promise<void>((resolve, reject) => {
+  if (typeof window === 'undefined') { reject(new Error('No window')); return; }
+  if (document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) { resolve(); return; }
+  const script = document.createElement('script');
+  script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+  script.onload = () => resolve();
+  script.onerror = () => reject(new Error('Failed to load Razorpay'));
+  document.body.appendChild(script);
+});
 
 export default function DonatePage() {
-  const [amount, setAmount] = useState<number>(presetAmounts[0]);
+  const [amount, setAmount] = useState<number>(5);
   const [isLoading, setIsLoading] = useState(false);
-
   const formattedAmount = useMemo(() => amount.toFixed(2), [amount]);
 
   const handleDonation = async () => {
-    if (amount <= 0 || Number.isNaN(amount)) {
-      toast.error('Enter an amount greater than zero.');
-      return;
-    }
-
+    if (amount <= 0 || Number.isNaN(amount)) { toast.error('Enter a valid amount.'); return; }
     setIsLoading(true);
     try {
       await loadRazorpayScript();
-      const razorpayCtor = (window as RazorpayWindow).Razorpay;
-      if (typeof razorpayCtor !== 'function') throw new Error('Razorpay unavailable');
-
-      const res = await fetch('/api/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: amount * 100 }),
-      });
-      if (!res.ok) throw new Error('Order creation failed');
+      const ctor = (window as RazorpayWindow).Razorpay;
+      if (typeof ctor !== 'function') throw new Error('Razorpay unavailable');
+      const res = await fetch('/api/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: amount * 100 }) });
+      if (!res.ok) throw new Error('Order failed');
       const order = await res.json();
-
-      const options: RazorpayCheckoutOptions = {
+      new ctor({
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: Math.round(amount * 100),
         currency: 'USD',
@@ -105,30 +63,23 @@ export default function DonatePage() {
         order_id: order.id,
         handler: () => { toast.success('Thanks for your support!'); },
         prefill: { name: '', email: '' },
-        theme: { color: '#ffffff' },
-      };
-
-      new razorpayCtor(options).open();
-    } catch {
-      toast.error('Payment failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+        theme: { color: '#1c1917' },
+      }).open();
+    } catch { toast.error('Payment failed. Please try again.'); }
+    finally { setIsLoading(false); }
   };
 
   return (
-    <div className="min-h-screen w-full text-white flex items-center justify-center px-4 py-28">
+    <div className="min-h-screen w-full flex items-center justify-center px-5 py-28">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-2xl space-y-8"
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-xl space-y-8"
       >
         <div className="space-y-3">
-          <h1 className="text-4xl font-bold tracking-tight text-white">
-            Keep Sendrn running
-          </h1>
-          <p className="text-lg text-white/50">
+          <h1 className="font-display text-4xl text-stone-900">Keep Sendrn running</h1>
+          <p className="text-lg text-stone-500">
             Donations cover hosting, bandwidth, and experiments that keep file rooms instant.
           </p>
         </div>
@@ -137,59 +88,62 @@ export default function DonatePage() {
           {tiers.map((tier) => {
             const Icon = tier.icon;
             return (
-              <button
+              <motion.button
                 key={tier.amount}
+                whileHover={{ y: -3 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => setAmount(tier.amount)}
-                className={`p-5 rounded-2xl border text-left transition-all ${
-                  amount === tier.amount
-                    ? 'bg-white/[0.08] border-white/20'
-                    : 'bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.05]'
+                className={`glass rounded-3xl p-5 text-left transition-all ${
+                  amount === tier.amount ? 'ring-2 ring-stone-900/20 shadow-md' : ''
                 }`}
               >
-                <div className="p-2 rounded-xl bg-white/[0.06] w-fit mb-3">
-                  <Icon className="w-4 h-4 text-white/70" />
+                <div className={`p-2 rounded-xl ${tier.bg} w-fit mb-3`}>
+                  <Icon className={`w-4 h-4 ${tier.color}`} />
                 </div>
-                <p className="font-semibold text-white">${tier.amount}</p>
-                <p className="text-sm text-white/50 mt-1">{tier.label}</p>
-              </button>
+                <p className="font-bold text-stone-900 text-lg">${tier.amount}</p>
+                <p className="text-xs text-stone-500 mt-0.5">{tier.label}</p>
+              </motion.button>
             );
           })}
         </div>
 
-        <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-4">
-          <Label htmlFor="custom-amount" className="text-sm text-white/50">Custom amount (USD)</Label>
+        <div className="glass rounded-3xl p-6 space-y-4">
+          <label htmlFor="custom-amount" className="text-sm font-medium text-stone-500">Custom amount (USD)</label>
           <input
             id="custom-amount"
             type="number"
             min="1"
             value={Number.isNaN(amount) ? '' : amount}
             onChange={(e) => setAmount(Number(e.target.value))}
-            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/25 transition-colors"
+            className="w-full px-4 py-3 rounded-xl bg-stone-50 border border-stone-200 text-stone-800 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-200 transition-shadow"
             placeholder="Enter amount"
           />
-          <Button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleDonation}
             disabled={isLoading || amount <= 0 || Number.isNaN(amount)}
-            className="w-full py-5 rounded-xl bg-white text-black hover:bg-white/90 font-medium"
+            className="w-full py-4 rounded-2xl bg-stone-900 text-white font-medium hover:bg-stone-800 disabled:opacity-40 transition-all shadow-lg shadow-stone-900/10"
           >
             {isLoading ? (
-              <span className="flex items-center gap-2">
+              <span className="flex items-center justify-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Processing...
               </span>
             ) : (
               `Donate $${formattedAmount}`
             )}
-          </Button>
+          </motion.button>
         </div>
 
-        <div className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
-          <p className="text-sm text-white/40">
-            Want recurring support?
-          </p>
-          <Button variant="outline" size="sm" className="rounded-xl border-white/10 bg-white/5 text-white/70 hover:bg-white/10" asChild>
-            <Link href="mailto:sudhanshu@sendrn.app">Email Sudhanshu</Link>
-          </Button>
+        <div className="flex items-center justify-between glass rounded-2xl p-5">
+          <p className="text-sm text-stone-400">Want recurring support?</p>
+          <Link
+            href="mailto:sudhanshu@sendrn.app"
+            className="px-4 py-2 rounded-xl bg-stone-100 text-stone-600 text-sm font-medium hover:bg-stone-200 transition-colors"
+          >
+            Email Sudhanshu
+          </Link>
         </div>
       </motion.div>
     </div>

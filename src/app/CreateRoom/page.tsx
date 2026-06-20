@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import FileRoom from '../../components/FileRoom';
-import { Button } from '../../components/ui/button';
 import { motion } from 'framer-motion';
 import { Plus, ArrowRight } from 'lucide-react';
 
@@ -15,9 +14,7 @@ function CreateRoomClient() {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const urlRoomId = urlParams.get('roomId');
-      if (urlRoomId) {
-        setRoomId(urlRoomId);
-      }
+      if (urlRoomId) setRoomId(urlRoomId);
     }
   }, []);
 
@@ -27,58 +24,51 @@ function CreateRoomClient() {
       const response = await fetch('/api/room/create', { method: 'POST' });
       const data = await response.json();
       setRoomId(data.roomId);
-    } catch {
-      // Retry silently
-    } finally {
-      setIsCreating(false);
-    }
+    } catch { /* retry */ }
+    finally { setIsCreating(false); }
   };
 
   const joinRoom = () => {
-    if (inputRoomId.trim()) {
-      setRoomId(inputRoomId.trim());
-    }
+    if (inputRoomId.trim()) setRoomId(inputRoomId.trim());
   };
 
   if (roomId) {
     return (
-      <div className="min-h-screen w-full flex flex-col pt-24 pb-12 px-4">
+      <div className="min-h-screen w-full flex flex-col pt-28 pb-12 px-5">
         <FileRoom roomId={roomId} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center px-4">
+    <div className="min-h-screen w-full flex items-center justify-center px-5">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="w-full max-w-md space-y-8"
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-sm space-y-8"
       >
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-white">
-            Start sharing
-          </h1>
-          <p className="text-white/50">
-            Create a new room or join an existing one
-          </p>
+          <h1 className="font-display text-3xl text-stone-900">Start sharing</h1>
+          <p className="text-stone-500">Create a new room or join an existing one</p>
         </div>
 
         <div className="space-y-4">
-          <Button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={createRoom}
             disabled={isCreating}
-            className="w-full py-6 rounded-2xl bg-white text-black hover:bg-white/90 font-medium text-base group"
+            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-stone-900 text-white font-medium text-base shadow-lg shadow-stone-900/10 hover:bg-stone-800 transition-colors disabled:opacity-60"
           >
-            <Plus className="w-5 h-5 mr-2" />
+            <Plus className="w-5 h-5" />
             {isCreating ? 'Creating...' : 'Create new room'}
-          </Button>
+          </motion.button>
 
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-white/30 text-sm">or join existing</span>
-            <div className="flex-1 h-px bg-white/10" />
+            <div className="flex-1 h-px bg-stone-200" />
+            <span className="text-stone-400 text-sm">or join existing</span>
+            <div className="flex-1 h-px bg-stone-200" />
           </div>
 
           <div className="flex gap-2">
@@ -87,16 +77,18 @@ function CreateRoomClient() {
               value={inputRoomId}
               onChange={(e) => setInputRoomId(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && joinRoom()}
-              className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/25 transition-colors"
+              className="flex-1 px-4 py-3 rounded-xl glass text-stone-800 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-200 transition-shadow border-0"
               placeholder="Enter room code"
             />
-            <Button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={joinRoom}
               disabled={!inputRoomId.trim()}
-              className="px-5 py-3 rounded-xl bg-white/10 border border-white/10 text-white hover:bg-white/15 disabled:opacity-30"
+              className="px-4 py-3 rounded-xl bg-stone-900 text-white hover:bg-stone-800 disabled:opacity-30 transition-all"
             >
               <ArrowRight className="w-5 h-5" />
-            </Button>
+            </motion.button>
           </div>
         </div>
       </motion.div>

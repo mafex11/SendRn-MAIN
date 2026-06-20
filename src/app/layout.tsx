@@ -1,5 +1,4 @@
 import './globals.css';
-import { ThemeProvider } from "../components/theme-provider"
 import { Navbar } from "../components/Navbar"
 import { Toaster } from 'sonner';
 
@@ -17,31 +16,36 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className="dark">
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <div className="mesh-gradient" aria-hidden="true" />
-          <div className="noise-overlay" aria-hidden="true" />
-          <Navbar />
-          <main className="relative z-10">
-            {children}
-          </main>
-          <Toaster
-            position="bottom-center"
-            toastOptions={{
-              style: {
-                background: 'oklch(0.15 0.015 260)',
-                border: '1px solid oklch(0.25 0.02 260)',
-                color: 'oklch(0.9 0.01 260)',
-              },
-            }}
-          />
-        </ThemeProvider>
+        <div className="page-bg" aria-hidden="true">
+          <div className="blob blob-1" />
+          <div className="blob blob-2" />
+          <div className="blob blob-3" />
+        </div>
+        <Navbar />
+        <main className="relative z-10">
+          {children}
+        </main>
+        <Toaster
+          position="bottom-center"
+          toastOptions={{
+            style: {
+              background: 'rgba(255, 255, 255, 0.8)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(0,0,0,0.06)',
+              color: '#1c1917',
+            },
+          }}
+        />
       </body>
     </html>
   );

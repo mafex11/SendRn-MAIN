@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "./ui/button";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -13,32 +12,26 @@ const navLinks = [
 ];
 
 export function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    document.body.style.overflow = isMenuOpen ? "hidden" : "unset";
-    return () => { document.body.style.overflow = "unset"; };
-  }, [isMenuOpen]);
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [isOpen]);
 
   return (
     <>
       <motion.nav
-        initial={{ opacity: 0, y: -10 }}
+        initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="fixed top-4 left-0 right-0 w-[92%] md:w-auto md:max-w-lg mx-auto z-50"
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="fixed top-5 left-0 right-0 z-50 mx-auto w-[90%] max-w-lg"
       >
-        <div className="rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] px-4 md:px-5 py-3 shadow-lg">
+        <div className="glass-strong rounded-2xl px-5 py-3">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <Image
-                src="/Flow.png"
-                alt="Sendrn"
-                width={28}
-                height={28}
-                className="rounded-full"
-              />
-              <span className="text-lg font-semibold text-white">Sendrn</span>
+            <Link href="/" className="flex items-center gap-2.5">
+              <Image src="/Flow.png" alt="Sendrn" width={26} height={26} className="rounded-full" />
+              <span className="text-lg font-semibold text-stone-900">Sendrn</span>
             </Link>
 
             <div className="hidden md:flex items-center gap-1">
@@ -46,60 +39,61 @@ export function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="px-3 py-1.5 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/5 transition-all"
+                  className="px-3.5 py-1.5 rounded-lg text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-black/[0.04] transition-all"
                 >
                   {link.label}
                 </Link>
               ))}
               <Link href="/CreateRoom" className="ml-2">
-                <Button
-                  size="sm"
-                  className="rounded-xl bg-white text-black hover:bg-white/90 font-medium px-4"
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="px-4 py-2 rounded-xl bg-stone-900 text-white text-sm font-medium shadow-sm hover:bg-stone-800 transition-colors"
                 >
                   Get Started
-                </Button>
+                </motion.button>
               </Link>
             </div>
 
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden text-white/70 p-1.5 hover:text-white transition-colors"
+              onClick={() => setIsOpen(!isOpen)}
+              className="md:hidden text-stone-700 p-1"
               aria-label="Toggle menu"
             >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
       </motion.nav>
 
       <AnimatePresence>
-        {isMenuOpen && (
+        {isOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-lg flex flex-col items-center justify-center gap-8"
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[100] bg-white/90 backdrop-blur-xl flex flex-col items-center justify-center gap-8"
           >
             <button
-              onClick={() => setIsMenuOpen(false)}
-              className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors"
+              onClick={() => setIsOpen(false)}
+              className="absolute top-6 right-6 text-stone-600 p-2"
               aria-label="Close menu"
             >
               <X className="w-6 h-6" />
             </button>
 
-            {navLinks.map((item, index) => (
+            {navLinks.map((item, i) => (
               <motion.div
                 key={item.href}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
+                transition={{ duration: 0.3, delay: i * 0.06 }}
               >
                 <Link
                   href={item.href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="text-3xl font-medium text-white/80 hover:text-white transition-colors"
+                  onClick={() => setIsOpen(false)}
+                  className="text-3xl font-display text-stone-800 hover:text-orange-600 transition-colors"
                 >
                   {item.label}
                 </Link>
@@ -110,10 +104,10 @@ export function Navbar() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.15 }}
             >
-              <Link href="/CreateRoom" onClick={() => setIsMenuOpen(false)}>
-                <Button className="rounded-full bg-white text-black hover:bg-white/90 text-lg px-8 py-5">
+              <Link href="/CreateRoom" onClick={() => setIsOpen(false)}>
+                <button className="rounded-2xl bg-stone-900 text-white text-xl px-8 py-4 font-medium">
                   Get Started
-                </Button>
+                </button>
               </Link>
             </motion.div>
           </motion.div>

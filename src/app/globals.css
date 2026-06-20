@@ -5,53 +5,33 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'DM Serif Display', Georgia, serif;
 }
 
 :root {
-  --background: oklch(0.07 0.01 260);
-  --foreground: oklch(0.95 0.01 260);
-  --card: oklch(0.12 0.015 260);
-  --card-foreground: oklch(0.95 0.01 260);
-  --popover: oklch(0.12 0.015 260);
-  --popover-foreground: oklch(0.95 0.01 260);
-  --primary: oklch(0.95 0.01 260);
-  --primary-foreground: oklch(0.1 0.02 260);
-  --secondary: oklch(0.2 0.02 260);
-  --secondary-foreground: oklch(0.95 0.01 260);
-  --muted: oklch(0.2 0.02 260);
-  --muted-foreground: oklch(0.6 0.02 260);
-  --accent: oklch(0.2 0.02 260);
-  --accent-foreground: oklch(0.95 0.01 260);
-  --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: oklch(0.55 0.2 25);
-  --border: oklch(0.22 0.02 260);
-  --input: oklch(0.22 0.02 260);
-  --ring: oklch(0.5 0.15 270);
-  --radius: 0.75rem;
-}
-
-.dark {
-  --background: oklch(0.07 0.01 260);
-  --foreground: oklch(0.95 0.01 260);
-  --card: oklch(0.12 0.015 260);
-  --card-foreground: oklch(0.95 0.01 260);
-  --popover: oklch(0.12 0.015 260);
-  --popover-foreground: oklch(0.95 0.01 260);
-  --primary: oklch(0.95 0.01 260);
-  --primary-foreground: oklch(0.1 0.02 260);
-  --secondary: oklch(0.2 0.02 260);
-  --secondary-foreground: oklch(0.95 0.01 260);
-  --muted: oklch(0.2 0.02 260);
-  --muted-foreground: oklch(0.6 0.02 260);
-  --accent: oklch(0.2 0.02 260);
-  --accent-foreground: oklch(0.95 0.01 260);
-  --destructive: oklch(0.45 0.15 25);
-  --destructive-foreground: oklch(0.6 0.22 25);
-  --border: oklch(0.22 0.02 260);
-  --input: oklch(0.22 0.02 260);
-  --ring: oklch(0.5 0.15 270);
+  --background: #fafaf9;
+  --foreground: #1c1917;
+  --card: rgba(255, 255, 255, 0.6);
+  --card-foreground: #1c1917;
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
+  --primary: #1c1917;
+  --primary-foreground: #fafaf9;
+  --secondary: #f5f5f4;
+  --secondary-foreground: #1c1917;
+  --muted: #f5f5f4;
+  --muted-foreground: #78716c;
+  --accent: #f5f5f4;
+  --accent-foreground: #1c1917;
+  --destructive: #dc2626;
+  --destructive-foreground: #fafaf9;
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.08);
+  --ring: #a8a29e;
+  --radius: 1rem;
+  --accent-warm: #f97316;
+  --accent-coral: #fb923c;
 }
 
 @theme inline {
@@ -92,92 +72,101 @@
   body {
     @apply bg-background text-foreground;
     overflow-x: hidden;
-    overflow-y: visible;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-family: var(--font-sans);
   }
 }
 
-@keyframes gradient-shift {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-}
-
-@keyframes float-delayed {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(-40px, 30px) scale(1.05);
-  }
-  66% {
-    transform: translate(25px, -40px) scale(0.95);
-  }
-}
-
-.mesh-gradient {
+/* Organic blob background */
+.page-bg {
   position: fixed;
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: oklch(0.07 0.01 260);
+  background: #fafaf9;
 }
 
-.mesh-gradient::before {
-  content: '';
+.blob {
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(ellipse at 20% 50%, oklch(0.25 0.12 270 / 0.4) 0%, transparent 50%),
-              radial-gradient(ellipse at 80% 20%, oklch(0.2 0.1 200 / 0.3) 0%, transparent 50%),
-              radial-gradient(ellipse at 40% 80%, oklch(0.18 0.08 310 / 0.25) 0%, transparent 50%);
-  animation: float 20s ease-in-out infinite;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  will-change: transform;
 }
 
-.mesh-gradient::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(ellipse at 60% 70%, oklch(0.22 0.1 240 / 0.3) 0%, transparent 45%),
-              radial-gradient(ellipse at 30% 30%, oklch(0.15 0.08 180 / 0.2) 0%, transparent 50%);
-  animation: float-delayed 25s ease-in-out infinite;
+.blob-1 {
+  width: 600px;
+  height: 600px;
+  background: linear-gradient(135deg, #fed7aa, #fecaca);
+  top: -10%;
+  right: -10%;
+  animation: drift-1 18s ease-in-out infinite;
 }
 
-.noise-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  opacity: 0.03;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+.blob-2 {
+  width: 500px;
+  height: 500px;
+  background: linear-gradient(135deg, #bfdbfe, #ddd6fe);
+  bottom: -5%;
+  left: -10%;
+  animation: drift-2 22s ease-in-out infinite;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+.blob-3 {
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, #d9f99d, #bbf7d0);
+  top: 40%;
+  left: 50%;
+  animation: drift-3 20s ease-in-out infinite;
+}
+
+@keyframes drift-1 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(-60px, 40px) rotate(5deg); }
+  66% { transform: translate(30px, -30px) rotate(-3deg); }
+}
+
+@keyframes drift-2 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(50px, -30px) rotate(-4deg); }
+  66% { transform: translate(-40px, 50px) rotate(6deg); }
+}
+
+@keyframes drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, 30px) scale(1.05); }
+  66% { transform: translate(-30px, -40px) scale(0.95); }
+}
+
+/* Glass card utility */
+.glass {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+/* Font classes */
+.font-display {
+  font-family: var(--font-display);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+.animate-fade-up {
+  animation: fadeUp 0.5s ease-out forwards;
 }

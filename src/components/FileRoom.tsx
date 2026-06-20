@@ -44,9 +44,7 @@ export default function FileRoom({ roomId }: { roomId: string }) {
 
   useEffect(() => {
     const stored = localStorage.getItem(`sendrn-text-${roomId}`);
-    if (stored) {
-      setTextMessages(JSON.parse(stored));
-    }
+    if (stored) setTextMessages(JSON.parse(stored));
   }, [roomId]);
 
   const fetchFiles = async () => {
@@ -64,9 +62,7 @@ export default function FileRoom({ roomId }: { roomId: string }) {
         merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         return merged;
       });
-    } catch {
-      // Silent retry on next interval
-    }
+    } catch { /* silent retry */ }
   };
 
   const uploadFile = async (file: File, index: number) => {
@@ -96,7 +92,6 @@ export default function FileRoom({ roomId }: { roomId: string }) {
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
-
     const queue = acceptedFiles.map(file => ({ file, progress: 0 }));
     setUploadQueue(queue);
     setIsUploading(true);
@@ -114,16 +109,10 @@ export default function FileRoom({ roomId }: { roomId: string }) {
     await fetchFiles();
     setIsUploading(false);
     setUploadQueue([]);
-
-    if (successCount > 0) {
-      toast.success(`${successCount} file${successCount > 1 ? 's' : ''} uploaded`);
-    }
+    if (successCount > 0) toast.success(`${successCount} file${successCount > 1 ? 's' : ''} uploaded`);
   }, [roomId]);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    multiple: true,
-  });
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, multiple: true });
 
   const roomUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/CreateRoom?roomId=${roomId}`
@@ -157,67 +146,67 @@ export default function FileRoom({ roomId }: { roomId: string }) {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-6 animate-fade-in">
-      {/* Room Header */}
+    <div className="w-full max-w-2xl mx-auto space-y-5 animate-fade-up">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-white">
-            Room <span className="font-mono text-white/70">{roomId}</span>
+          <h1 className="font-display text-2xl text-stone-900">
+            Room <span className="font-mono text-stone-500 text-lg">{roomId}</span>
           </h1>
           <button
             onClick={() => handleCopy(roomId, 'Room ID')}
-            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-black/[0.04] transition-colors"
           >
             {copied === 'Room ID' ? (
-              <Check className="w-4 h-4 text-emerald-400" />
+              <Check className="w-4 h-4 text-emerald-500" />
             ) : (
-              <Copy className="w-4 h-4 text-white/50" />
+              <Copy className="w-4 h-4 text-stone-400" />
             )}
           </button>
         </div>
         <button
           onClick={() => setShowQR(!showQR)}
-          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-sm text-white/70"
+          className="flex items-center gap-2 px-3 py-2 rounded-xl glass text-sm text-stone-600 font-medium hover:bg-white/80 transition-colors"
         >
           <QrCode className="w-4 h-4" />
           <span className="hidden sm:inline">QR</span>
         </button>
       </div>
 
-      {/* QR Code Panel */}
+      {/* QR Panel */}
       <AnimatePresence>
         {showQR && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+            <div className="glass rounded-3xl p-6">
               <div className="flex flex-col items-center gap-4">
                 <QRCodeSVG
                   value={roomUrl}
-                  size={180}
+                  size={170}
                   level="H"
                   includeMargin
                   className="rounded-xl"
                   bgColor="#ffffff"
-                  fgColor="#09090b"
+                  fgColor="#1c1917"
                 />
-                <p className="text-sm text-white/50">Scan to open on another device</p>
+                <p className="text-sm text-stone-400">Scan to open on another device</p>
                 <div className="flex items-center gap-2 w-full max-w-sm">
                   <input
                     type="text"
                     value={roomUrl}
                     readOnly
-                    className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 text-xs truncate"
+                    className="flex-1 px-3 py-2 rounded-xl bg-stone-50 border border-stone-200 text-stone-500 text-xs truncate"
                   />
                   <button
                     onClick={() => handleCopy(roomUrl, 'Link')}
-                    className="px-3 py-2 rounded-lg bg-white/10 border border-white/10 hover:bg-white/15 transition-colors text-sm text-white"
+                    className="px-3 py-2 rounded-xl bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 transition-colors"
                   >
-                    {copied === 'Link' ? 'Copied' : 'Copy'}
+                    {copied === 'Link' ? 'Copied!' : 'Copy'}
                   </button>
                 </div>
               </div>
@@ -226,63 +215,52 @@ export default function FileRoom({ roomId }: { roomId: string }) {
         )}
       </AnimatePresence>
 
-      {/* Tab Switcher */}
-      <div className="flex gap-1 p-1 rounded-xl bg-white/5 border border-white/10">
-        <button
-          onClick={() => setActiveTab('files')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
-            activeTab === 'files'
-              ? 'bg-white/10 text-white'
-              : 'text-white/50 hover:text-white/70'
-          }`}
-        >
-          <Upload className="w-4 h-4" />
-          Files
-        </button>
-        <button
-          onClick={() => setActiveTab('text')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
-            activeTab === 'text'
-              ? 'bg-white/10 text-white'
-              : 'text-white/50 hover:text-white/70'
-          }`}
-        >
-          <FileText className="w-4 h-4" />
-          Text
-        </button>
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 rounded-2xl glass">
+        {(['files', 'text'] as Tab[]).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              activeTab === tab
+                ? 'bg-white shadow-sm text-stone-900'
+                : 'text-stone-400 hover:text-stone-600'
+            }`}
+          >
+            {tab === 'files' ? <Upload className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+            {tab === 'files' ? 'Files' : 'Text'}
+          </button>
+        ))}
       </div>
 
       {/* Files Tab */}
       {activeTab === 'files' && (
         <div className="space-y-4">
-          {/* Drop Zone */}
           <div
             {...getRootProps()}
-            className={`
-              relative rounded-2xl border-2 border-dashed p-8 text-center cursor-pointer transition-all duration-200
-              ${isDragActive
-                ? 'border-white/40 bg-white/10 scale-[1.01]'
-                : 'border-white/15 hover:border-white/30 hover:bg-white/5'
-              }
-            `}
+            className={`relative rounded-3xl border-2 border-dashed p-10 text-center cursor-pointer transition-all duration-200 ${
+              isDragActive
+                ? 'border-orange-300 bg-orange-50/50 scale-[1.01]'
+                : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50/50'
+            }`}
           >
             <input {...getInputProps()} />
             <div className="flex flex-col items-center gap-3">
-              <div className={`p-4 rounded-2xl transition-colors ${isDragActive ? 'bg-white/15' : 'bg-white/5'}`}>
-                <Upload className={`w-8 h-8 ${isDragActive ? 'text-white' : 'text-white/40'}`} />
+              <div className={`p-4 rounded-2xl ${isDragActive ? 'bg-orange-100' : 'bg-stone-100'} transition-colors`}>
+                <Upload className={`w-7 h-7 ${isDragActive ? 'text-orange-500' : 'text-stone-400'}`} />
               </div>
               {isDragActive ? (
-                <p className="text-white font-medium">Drop files here</p>
+                <p className="text-stone-700 font-medium">Drop files here</p>
               ) : (
                 <div className="space-y-1">
-                  <p className="text-white/80 font-medium">Drop files or click to upload</p>
-                  <p className="text-white/40 text-sm">Multiple files supported</p>
+                  <p className="text-stone-600 font-medium">Drop files or click to upload</p>
+                  <p className="text-stone-400 text-sm">Multiple files supported</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Upload Progress */}
+          {/* Progress */}
           <AnimatePresence>
             {isUploading && uploadQueue.length > 0 && (
               <motion.div
@@ -292,19 +270,19 @@ export default function FileRoom({ roomId }: { roomId: string }) {
                 className="space-y-2 overflow-hidden"
               >
                 {uploadQueue.map((item, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-2xl glass">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white/80 truncate">{item.file.name}</p>
-                      <div className="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
+                      <p className="text-sm text-stone-700 truncate">{item.file.name}</p>
+                      <div className="mt-1.5 h-1.5 rounded-full bg-stone-100 overflow-hidden">
                         <motion.div
-                          className="h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500"
+                          className="h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-400"
                           initial={{ width: 0 }}
                           animate={{ width: `${item.progress}%` }}
                           transition={{ duration: 0.3 }}
                         />
                       </div>
                     </div>
-                    <span className="text-xs text-white/50 tabular-nums">{item.progress}%</span>
+                    <span className="text-xs text-stone-400 font-medium tabular-nums">{item.progress}%</span>
                   </div>
                 ))}
               </motion.div>
@@ -314,9 +292,9 @@ export default function FileRoom({ roomId }: { roomId: string }) {
           {/* File List */}
           {files.length > 0 && (
             <div className="space-y-2">
-              <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">
-                {files.length} file{files.length > 1 ? 's' : ''} in room
-              </h2>
+              <p className="text-xs font-medium text-stone-400 uppercase tracking-wider px-1">
+                {files.length} file{files.length > 1 ? 's' : ''}
+              </p>
               <div className="space-y-2">
                 {files.map((file) => {
                   const name = file.original_filename && file.original_filename !== 'file'
@@ -326,23 +304,23 @@ export default function FileRoom({ roomId }: { roomId: string }) {
                   return (
                     <motion.div
                       key={file.public_id}
-                      initial={{ opacity: 0, y: 10 }}
+                      initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/8 transition-colors group"
+                      className="flex items-center gap-3 p-3.5 rounded-2xl glass group hover:shadow-md transition-shadow"
                     >
-                      <div className="p-2 rounded-lg bg-white/5">
-                        <Icon className="w-4 h-4 text-white/60" />
+                      <div className="p-2 rounded-xl bg-stone-100">
+                        <Icon className="w-4 h-4 text-stone-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white/90 truncate">{name}</p>
-                        <p className="text-xs text-white/40">{formatBytes(file.bytes)}</p>
+                        <p className="text-sm font-medium text-stone-800 truncate">{name}</p>
+                        <p className="text-xs text-stone-400">{formatBytes(file.bytes)}</p>
                       </div>
                       <a
                         href={file.secure_url}
                         download
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 transition-colors text-sm text-white/80 opacity-0 group-hover:opacity-100 sm:opacity-100"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-900 text-white text-xs font-medium hover:bg-stone-800 transition-colors opacity-0 group-hover:opacity-100 sm:opacity-100"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span className="hidden sm:inline">Download</span>
@@ -355,8 +333,8 @@ export default function FileRoom({ roomId }: { roomId: string }) {
           )}
 
           {files.length === 0 && !isUploading && (
-            <p className="text-center text-white/30 text-sm py-8">
-              No files yet. Drop something above to get started.
+            <p className="text-center text-stone-400 text-sm py-8">
+              No files yet — drop something to get started.
             </p>
           )}
         </div>
@@ -377,53 +355,51 @@ export default function FileRoom({ roomId }: { roomId: string }) {
                 }
               }}
               placeholder="Paste text, links, code snippets..."
-              className="w-full min-h-[120px] p-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 resize-none focus:outline-none focus:border-white/25 transition-colors"
+              className="w-full min-h-[120px] p-4 rounded-2xl glass border-0 text-stone-800 placeholder-stone-300 resize-none focus:outline-none focus:ring-2 focus:ring-stone-200 transition-shadow"
             />
             <div className="absolute bottom-3 right-3 flex items-center gap-2">
-              <span className="text-xs text-white/30">
-                {navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}+Enter
+              <span className="text-xs text-stone-300">
+                {typeof navigator !== 'undefined' && navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}+Enter
               </span>
               <button
                 onClick={handleSendText}
                 disabled={!textInput.trim()}
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="p-2 rounded-xl bg-stone-900 text-white hover:bg-stone-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
-                <Send className="w-4 h-4 text-white" />
+                <Send className="w-4 h-4" />
               </button>
             </div>
           </div>
 
           {textMessages.length > 0 && (
             <div className="space-y-2">
-              <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">
-                Saved text
-              </h2>
+              <p className="text-xs font-medium text-stone-400 uppercase tracking-wider px-1">Saved text</p>
               {textMessages.map((msg) => (
                 <motion.div
                   key={msg.id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="group relative p-4 rounded-xl bg-white/5 border border-white/10"
+                  className="group relative p-4 rounded-2xl glass"
                 >
-                  <pre className="text-sm text-white/80 whitespace-pre-wrap break-words font-mono leading-relaxed">
+                  <pre className="text-sm text-stone-700 whitespace-pre-wrap break-words font-mono leading-relaxed">
                     {msg.content}
                   </pre>
-                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-2.5 right-2.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleCopy(msg.content, msg.id)}
-                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                      className="p-1.5 rounded-lg bg-white/80 hover:bg-white shadow-sm transition-colors"
                     >
                       {copied === msg.id ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <Check className="w-3.5 h-3.5 text-emerald-500" />
                       ) : (
-                        <Copy className="w-3.5 h-3.5 text-white/60" />
+                        <Copy className="w-3.5 h-3.5 text-stone-400" />
                       )}
                     </button>
                     <button
                       onClick={() => handleDeleteText(msg.id)}
-                      className="p-1.5 rounded-lg bg-white/10 hover:bg-red-500/20 transition-colors"
+                      className="p-1.5 rounded-lg bg-white/80 hover:bg-red-50 shadow-sm transition-colors"
                     >
-                      <X className="w-3.5 h-3.5 text-white/60" />
+                      <X className="w-3.5 h-3.5 text-stone-400 hover:text-red-500" />
                     </button>
                   </div>
                 </motion.div>
@@ -432,7 +408,7 @@ export default function FileRoom({ roomId }: { roomId: string }) {
           )}
 
           {textMessages.length === 0 && (
-            <p className="text-center text-white/30 text-sm py-8">
+            <p className="text-center text-stone-400 text-sm py-8">
               Share text, links, or code between your devices.
             </p>
           )}
